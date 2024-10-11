@@ -17,8 +17,8 @@ app.prepare().then(() => {
   server.post("/api/issues", (req, res) => {
     const newIssue = req.body;
     issues.push(newIssue);
-    console.log("Created Issue:", newIssue);
-    res.status(201).json({ message: "Issue created", data: newIssue });
+
+    res.status(201).json({ message: "Issue created", data: issues });
   });
 
   server.get("/api/issues", (req, res) => {
@@ -32,7 +32,6 @@ app.prepare().then(() => {
 
     if (index !== -1) {
       issues[index] = updatedIssue;
-      console.log("Updated Issue:", updatedIssue);
       res.status(200).json({ message: "Issue updated", data: updatedIssue });
     } else {
       res.status(404).json({ message: "Issue not found" });
