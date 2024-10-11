@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const next = require("next");
 
@@ -10,7 +11,8 @@ const issues = [
   { id: 2, title: "Issue 2", description: "Description for issue 2" },
 ];
 
-app.prepare().then(() => {
+// Create a function to initialize the server
+const createServer = () => {
   const server = express();
   server.use(express.json());
 
@@ -65,9 +67,23 @@ app.prepare().then(() => {
     return handle(req, res);
   });
 
+  return server; // Return the server instance for external use
+};
+
+// Export a function to start the server
+const startServer = async () => {
+  await app.prepare();
   const port = process.env.PORT || 3000;
-  server.listen(port, (err) => {
+  const server = createServer();
+
+  // Allow for graceful shutdowns
+  const httpServer = server.listen(port, (err) => {
     if (err) throw err;
     console.log(`> Ready on http://localhost:${port}`);
   });
-});
+
+  return httpServer; // Return the server instance for testing
+};
+
+// Export the server creation function for testing
+module.exports = { createServer, startServer };
