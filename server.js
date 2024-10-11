@@ -16,9 +16,15 @@ app.prepare().then(() => {
 
   server.post("/api/issues", (req, res) => {
     const newIssue = req.body;
-    issues.push(newIssue);
 
-    res.status(201).json({ message: "Issue created", data: issues });
+    // Generate a unique ID for the new issue
+    const newId =
+      issues.length > 0 ? Math.max(...issues.map((issue) => issue.id)) + 1 : 1;
+    const issueWithId = { ...newIssue, id: newId };
+
+    issues.push(issueWithId);
+
+    res.status(201).json({ message: "Issue created", data: issueWithId });
   });
 
   server.get("/api/issues", (req, res) => {
@@ -28,6 +34,9 @@ app.prepare().then(() => {
   server.put("/api/issues/:id", (req, res) => {
     const id = parseInt(req.params.id, 10);
     const updatedIssue = req.body;
+
+    // Ensure the updated issue contains the correct ID
+    updatedIssue.id = id;
     const index = issues.findIndex((issue) => issue.id === id);
 
     if (index !== -1) {

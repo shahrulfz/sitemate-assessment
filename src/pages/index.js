@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import IssueModal from "@/components/IssueModal"; // Adjust the path if necessary
 
 const BASE_URL = "http://localhost:3000/api/issues";
 
@@ -7,11 +8,8 @@ export default function Home() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [newIssue, setNewIssue] = useState({
-    id: "",
-    title: "",
-    description: "",
-  });
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [currentIssue, setCurrentIssue] = useState(null);
 
   useEffect(() => {
     fetchIssues();
@@ -28,14 +26,21 @@ export default function Home() {
     }
   };
 
-  const handleCreate = async () => {
+  const handleCreate = async (newIssue) => {
     try {
-      const latestIssues = await axios.post(BASE_URL, newIssue);
-      setNewIssue({ id: "", title: "", description: "" });
-      setShowModal(false);
+      await axios.post(BASE_URL, newIssue);
       fetchIssues();
     } catch (error) {
       console.error("Error creating issue:", error);
+    }
+  };
+
+  const handleUpdate = async (updatedIssue) => {
+    try {
+      await axios.put(`${BASE_URL}/${updatedIssue.id}`, updatedIssue);
+      fetchIssues();
+    } catch (error) {
+      console.error("Error updating issue:", error);
     }
   };
 
@@ -46,6 +51,17 @@ export default function Home() {
     } catch (error) {
       console.error("Error deleting issue:", error);
     }
+  };
+
+  const openCreateModal = () => {
+    setIsUpdateMode(false);
+    setShowModal(true);
+  };
+
+  const openUpdateModal = (issue) => {
+    setCurrentIssue(issue);
+    setIsUpdateMode(true);
+    setShowModal(true);
   };
 
   return (
@@ -77,12 +93,12 @@ export default function Home() {
                     >
                       Delete
                     </button>
-                    <a
-                      href={`/update/${issue.id}`}
+                    <button
+                      onClick={() => openUpdateModal(issue)}
                       className="ml-2 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
                     >
                       Update
-                    </a>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -91,57 +107,21 @@ export default function Home() {
         </div>
       )}
       <button
-        onClick={() => setShowModal(true)}
+        onClick={openCreateModal}
         className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
       >
         Create New Issue
       </button>
 
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-md">
-            <h2 className="text-xl font-bold mb-4">Create New Issue</h2>
-            <input
-              type="text"
-              placeholder="ID"
-              value={newIssue.id}
-              onChange={(e) => setNewIssue({ ...newIssue, id: e.target.value })}
-              className="w-full px-3 py-2 mb-2 border rounded"
-            />
-            <input
-              type="text"
-              placeholder="Title"
-              value={newIssue.title}
-              onChange={(e) =>
-                setNewIssue({ ...newIssue, title: e.target.value })
-              }
-              className="w-full px-3 py-2 mb-2 border rounded"
-            />
-            <textarea
-              placeholder="Description"
-              value={newIssue.description}
-              onChange={(e) =>
-                setNewIssue({ ...newIssue, description: e.target.value })
-              }
-              className="w-full px-3 py-2 mb-2 border rounded"
-            ></textarea>
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowModal(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mr-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreate}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <IssueModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setCurrentIssue(null); // Reset current issue
+        }}
+        onSubmit={isUpdateMode ? handleUpdate : handleCreate}
+        initialIssue={currentIssue}
+      />
     </div>
   );
 }
